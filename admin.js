@@ -1,4 +1,58 @@
 
+2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { supabase } from "./supabase.js";
 
 const $ = id => document.getElementById(id);
@@ -12,6 +66,7 @@ let configuracion = {};
 let borrador = [];
 let partidoBorrador = null;
 let temporizador;
+let eventoResultados = "";
 
 function seguro(valor) {
     return String(valor ?? "").replace(/[&<>"']/g, c => ({
@@ -651,6 +706,7 @@ $("publicar-fixture").addEventListener("click", () => {
                 )
             );
 
+            eventoResultados = partidoBorrador;
             borrador = [];
             partidoBorrador = null;
             $("fixture-preview").innerHTML = "";
@@ -667,17 +723,17 @@ $("publicar-fixture").addEventListener("click", () => {
 // RESULTADOS
 
 function mostrarEnfrentamientos() {
-    $("admin-lista-enfrentamientos").innerHTML =
-        enfrentamientos.length
-        ? enfrentamientos.map(e => {
-
-            const partido = partidos.find(
-                p => p.id === e.partido_id
-            );
-
+    const contenedor = $("admin-lista-enfrentamientos");
+    if (!partidos.some(p => p.id === eventoResultados)) {
+        eventoResultados = "";
+    }
+    const lista = enfrentamientos.filter(e => e.partido_id === eventoResultados);
+    const grupos = [...new Set(lista.map(e => e.grupo || "General"))].sort();
+    const partido = partidos.find(p => p.id === eventoResultados);
+    function tarjeta(e) {
             return `
                 <div class="admin-card">
-                    <h2>${seguro(partido?.titulo)}</h2>
+                    <h3>Turno ${e.turno} · Cancha ${e.cancha}</h3>
 
                     <p>Turno ${e.turno} |
                        Cancha ${e.cancha} |
@@ -722,8 +778,32 @@ function mostrarEnfrentamientos() {
                     </form>
                 </div>
             `;
-        }).join("") :
-        '<div class="empty">No hay enfrentamientos registrados.</div>';
+    }
+    contenedor.innerHTML = `
+        <div class="admin-card">
+            <h2>Gestionar resultados por evento</h2>
+            <div class="admin-form">
+                <label>Seleccionar partido o torneo
+                    <select id="resultados-partido">
+                        <option value="">Seleccionar evento</option>
+                        ${partidos.map(p => `<option value="${seguro(p.id)}" ${p.id === eventoResultados ? "selected" : ""}>${seguro(p.titulo)} — ${seguro(p.fecha)}</option>`).join("")}
+                    </select>
+                </label>
+            </div>
+            ${partido ? `<p>${seguro(partido.titulo)} · ${lista.length} enfrentamientos · ${lista.filter(e => e.puntos1 !== null && e.puntos2 !== null).length} con resultado</p>` : ""}
+        </div>
+        ${!eventoResultados ? '<div class="empty">Selecciona un evento para gestionar sus resultados.</div>' : !lista.length ? '<div class="empty">Este evento no tiene enfrentamientos registrados.</div>' : grupos.map(grupo => `
+            <div class="admin-card" style="border-left:4px solid #ffda00">
+                <h2 style="color:#ffda00">Grupo ${seguro(grupo)}</h2>
+                <p>${lista.filter(e => (e.grupo || "General") === grupo).length} enfrentamientos</p>
+            </div>
+            ${lista.filter(e => (e.grupo || "General") === grupo).sort((a,b) => a.turno-b.turno || a.cancha-b.cancha).map(tarjeta).join("")}
+        `).join("")}
+    `;
+    $("resultados-partido").addEventListener("change", e => {
+        eventoResultados = e.target.value;
+        mostrarEnfrentamientos();
+    });
 
     document.querySelectorAll(".resultado-form")
         .forEach(f => {
@@ -1065,3 +1145,7 @@ document.addEventListener("click", e => {
 // INICIAR PANEL
 
 ejecutar(verificarSesion);
+
+
+
+
