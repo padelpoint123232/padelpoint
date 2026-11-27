@@ -1,4 +1,3 @@
-
 :root {
     --yellow: #ffda00;
     --black: #080808;
@@ -738,4 +737,22 @@ tr:nth-child(even) td {
         font-size: 12px;
     }
 
+}
+
+/* TARJETAS DE ENFRENTAMIENTOS - SOLO PAGINA PUBLICA */
+#lista-enfrentamientos .fixture-mobile { display: none; }
+
+@media (max-width: 600px) {
+    #lista-enfrentamientos .fixture-card { min-width: 0; padding: 12px; overflow-x: visible; }
+    #lista-enfrentamientos .fixture-card table { display: none; }
+    #lista-enfrentamientos .fixture-mobile { display: grid; gap: 12px; }
+    .fixture-game { background: #1b1b1b; border: 1px solid var(--border); border-radius: 10px; padding: 12px; min-width: 0; }
+    .fixture-game-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--yellow); font-size: 13px; }
+    .fixture-group { color: var(--muted); font-size: 12px; margin: 10px 0; }
+    .fixture-versus { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: 8px; border-top: 1px solid var(--border); padding: 15px 0; }
+    .fixture-team { display: grid; gap: 5px; text-align: center; min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
+    .fixture-team strong { font-size: 14px; }
+    .fixture-score { color: var(--yellow); font-size: 19px; white-space: nowrap; }
+    .fixture-status { border-top: 1px solid var(--border); padding-top: 10px; text-align: center; color: var(--muted); font-size: 12px; }
+    .fixture-status.fixture-done { color: var(--yellow); }
 }
