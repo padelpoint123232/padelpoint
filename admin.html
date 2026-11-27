@@ -1,0 +1,449 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101010">
+    <title>Administración | Padel Point</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./admin.css">
+</head>
+
+<body class="admin-body">
+
+    <header class="admin-header">
+        <a href="./index.html" class="brand">
+            <span>PADEL POINT</span>
+        </a>
+
+        <a href="./index.html" class="btn">
+            Ver página web
+        </a>
+    </header>
+
+    <!-- INICIO DE SESIÓN -->
+
+    <section id="login-section" class="login-section">
+
+        <div class="login-card">
+
+            <span class="badge">ACCESO PRIVADO</span>
+
+            <h1>Administración</h1>
+
+            <p>Bienvenido al panel de Padel Point.</p>
+
+            <form id="login-form">
+
+                <label>Correo electrónico</label>
+
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Correo electrónico"
+                    autocomplete="username"
+                    required
+                >
+
+                <label>Contraseña</label>
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Tu contraseña"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button type="submit" class="btn">
+                    Iniciar sesión
+                </button>
+
+                <p id="login-error" role="alert"></p>
+
+            </form>
+
+        </div>
+
+    </section>
+
+    <!-- PANEL PRINCIPAL -->
+
+    <div id="admin-panel" hidden>
+
+        <aside class="admin-sidebar">
+
+            <h2>PADEL POINT</h2>
+
+            <p>Panel administrativo</p>
+
+            <nav class="admin-menu">
+
+                <button data-section="dashboard">
+                    📊 Resumen
+                </button>
+
+                <button data-section="partidos">
+                    🎾 Partidos
+                </button>
+
+                <button data-section="inscritos">
+                    👥 Inscritos
+                </button>
+
+                <button data-section="enfrentamientos">
+                    🏆 Enfrentamientos
+                </button>
+
+                <button data-section="ranking">
+                    🥇 Ranking
+                </button>
+
+                <button data-section="productos">
+                    🛍️ Productos
+                </button>
+
+                <button data-section="categorias">
+                    📁 Categorías
+                </button>
+
+                <button data-section="configuracion">
+                    ⚙️ Configuración
+                </button>
+
+                <button id="logout-btn">
+                    🚪 Cerrar sesión
+                </button>
+
+            </nav>
+
+        </aside>
+
+        <main class="admin-main">
+
+            <!-- RESUMEN -->
+
+            <section id="section-dashboard" class="admin-section">
+
+                <h1>Panel de administración</h1>
+
+                <p id="admin-name">Bienvenido</p>
+
+                <div class="stats-grid">
+
+                    <div class="stat-card">
+                        <span>Partidos</span>
+                        <h2 id="admin-total-partidos">0</h2>
+                    </div>
+
+                    <div class="stat-card">
+                        <span>Jugadores inscritos</span>
+                        <h2 id="admin-total-jugadores">0</h2>
+                    </div>
+
+                    <div class="stat-card">
+                        <span>Productos</span>
+                        <h2 id="admin-total-productos">0</h2>
+                    </div>
+
+                    <div class="stat-card">
+                        <span>Enfrentamientos</span>
+                        <h2 id="admin-total-enfrentamientos">0</h2>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- PARTIDOS -->
+
+            <section id="section-partidos" class="admin-section" hidden>
+
+                <h1>Gestión de partidos</h1>
+
+                <div class="admin-card">
+
+                    <h2>Crear partido</h2>
+
+                    <form id="partido-form" class="admin-form">
+
+                        <input type="hidden" name="id">
+
+                        <label>
+                            Nombre del partido
+                            <input name="titulo" required>
+                        </label>
+
+                        <label>
+                            Categoría
+                            <input name="categoria" required>
+                        </label>
+
+                        <label>
+                            Fecha
+                            <input type="date" name="fecha" required>
+                        </label>
+
+                        <label>
+                            Hora
+                            <input type="time" name="hora" required>
+                        </label>
+
+                        <label>
+                            Lugar
+                            <input name="lugar" placeholder="Padel Point" required>
+                        </label>
+
+                        <label>
+                            Cupos
+                            <input type="number" name="cupos" min="2" required>
+                        </label>
+
+                        <label>
+                            Número de canchas
+                            <input type="number" name="canchas" min="1" required>
+                        </label>
+
+                        <label>
+                            Precio
+                            <input type="number" name="precio" min="0" step="0.01" required>
+                        </label>
+
+                        <label>
+                            Premio
+                            <input name="premio">
+                        </label>
+
+                        <label>
+                            Estado
+                            <select name="estado">
+                                <option value="abierto">Abierto</option>
+                                <option value="cerrado">Cerrado</option>
+                                <option value="finalizado">Finalizado</option>
+                            </select>
+                        </label>
+
+                        <button type="submit" class="btn">
+                            Guardar partido
+                        </button>
+
+                    </form>
+
+                </div>
+
+                <div id="admin-lista-partidos"></div>
+
+            </section>
+
+            <!-- INSCRITOS -->
+
+            <section id="section-inscritos" class="admin-section" hidden>
+
+                <h1>Jugadores inscritos</h1>
+
+                <select id="inscritos-partido"></select>
+
+                <div id="admin-lista-inscritos"></div>
+
+            </section>
+
+            <!-- ENFRENTAMIENTOS -->
+
+            <section id="section-enfrentamientos" class="admin-section" hidden>
+
+                <h1>Generador de enfrentamientos</h1>
+
+                <div class="admin-card">
+
+                    <form id="generador-form" class="admin-form">
+
+                        <label>
+                            Seleccionar partido
+                            <select name="partido_id" id="fixture-partido" required></select>
+                        </label>
+
+                        <label>
+                            Número de grupos
+                            <select name="grupos">
+                                <option value="1">Un grupo</option>
+                                <option value="2">Dos grupos</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            Partidos por pareja
+                            <input type="number" name="partidos_por_pareja" min="1" value="3" required>
+                        </label>
+
+                        <label>
+                            Canchas disponibles
+                            <input type="number" name="canchas" min="1" value="2" required>
+                        </label>
+
+                        <button type="submit" class="btn">
+                            Generar enfrentamientos
+                        </button>
+
+                    </form>
+
+                </div>
+
+                <div id="fixture-preview"></div>
+
+                <button id="publicar-fixture" class="btn" hidden>
+                    Publicar enfrentamientos
+                </button>
+
+                <div id="admin-lista-enfrentamientos"></div>
+
+            </section>
+
+            <!-- RANKING -->
+
+            <section id="section-ranking" class="admin-section" hidden>
+
+                <h1>Ranking de jugadores</h1>
+
+                <div id="admin-ranking"></div>
+
+            </section>
+
+            <!-- PRODUCTOS -->
+
+            <section id="section-productos" class="admin-section" hidden>
+
+                <h1>Tienda Padel Point</h1>
+
+                <div class="admin-card">
+
+                    <h2>Agregar producto</h2>
+
+                    <form id="producto-form" class="admin-form">
+
+                        <input type="hidden" name="id">
+
+                        <label>
+                            Nombre del producto
+                            <input name="nombre" required>
+                        </label>
+
+                        <label>
+                            Categoría
+                            <select name="categoria_id" id="producto-categoria"></select>
+                        </label>
+
+                        <label>
+                            Precio
+                            <input type="number" name="precio" min="0" step="0.01" required>
+                        </label>
+
+                        <label>
+                            Imagen del producto (URL)
+                            <input type="url" name="imagen">
+                        </label>
+
+                        <label>
+                            Descripción
+                            <textarea name="descripcion"></textarea>
+                        </label>
+
+                        <label class="check-label">
+                            <input type="checkbox" name="disponible" checked>
+                            Disponible
+                        </label>
+
+                        <label class="check-label">
+                            <input type="checkbox" name="publicado" checked>
+                            Publicar en la tienda
+                        </label>
+
+                        <label class="check-label">
+                            <input type="checkbox" name="destacado">
+                            Producto destacado
+                        </label>
+
+                        <button type="submit" class="btn">
+                            Guardar producto
+                        </button>
+
+                    </form>
+
+                </div>
+
+                <div id="admin-lista-productos"></div>
+
+            </section>
+
+            <!-- CATEGORÍAS -->
+
+            <section id="section-categorias" class="admin-section" hidden>
+
+                <h1>Categorías de productos</h1>
+
+                <div class="admin-card">
+
+                    <form id="categoria-form" class="admin-form">
+
+                        <label>
+                            Nombre de la categoría
+                            <input name="nombre" placeholder="Ej. Palas de pádel" required>
+                        </label>
+
+                        <button type="submit" class="btn">
+                            Crear categoría
+                        </button>
+
+                    </form>
+
+                </div>
+
+                <div id="admin-lista-categorias"></div>
+
+            </section>
+
+            <!-- CONFIGURACIÓN -->
+
+            <section id="section-configuracion" class="admin-section" hidden>
+
+                <h1>Configuración del negocio</h1>
+
+                <div class="admin-card">
+
+                    <form id="configuracion-form" class="admin-form">
+
+                        <label>
+                            WhatsApp de Padel Point
+                            <input
+                                name="whatsapp"
+                                type="tel"
+                                placeholder="593XXXXXXXXX"
+                                pattern="[1-9][0-9]{7,14}"
+                            >
+                        </label>
+
+                        <label>
+                            Dirección del club
+                            <input name="direccion">
+                        </label>
+
+                        <button type="submit" class="btn">
+                            Guardar configuración
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <div id="notificacion" role="status" hidden></div>
+
+    <script type="module" src="./admin.js"></script>
+
+</body>
+</html>
