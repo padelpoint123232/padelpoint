@@ -1,0 +1,250 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffda00">
+    <meta name="description" content="Encuentra partidos, torneos y productos de pádel en Padel Point.">
+    <title>Padel Point | Vive el pádel</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="icon" href="./logo.png">
+</head>
+
+<body>
+
+    <!-- ENCABEZADO -->
+
+    <header class="header">
+        <a href="#inicio" class="brand">
+            <img src="./logo.png" alt="Padel Point">
+        </a>
+
+        <nav class="nav">
+            <a href="#inicio">Inicio</a>
+            <a href="#partidos">Partidos</a>
+            <a href="#enfrentamientos">Enfrentamientos</a>
+            <a href="#tienda">Tienda</a>
+            <a href="#estadisticas">Estadísticas</a>
+        </nav>
+
+        <a href="./admin.html" class="admin-btn">
+            Administración
+        </a>
+    </header>
+
+    <main>
+
+        <!-- PORTADA -->
+
+        <section class="hero" id="inicio">
+
+            <div class="hero-content">
+
+                <span class="eyebrow">
+                    BIENVENIDO A PADEL POINT
+                </span>
+
+                <h1>
+                    ORGANIZA,<br>
+                    JUEGA Y VIVE<br>
+                    <span>EL PÁDEL.</span>
+                </h1>
+
+                <p>
+                    Encuentra tu próximo partido, inscríbete
+                    con tu pareja, participa en torneos y
+                    descubre todo lo que Padel Point tiene
+                    para ti.
+                </p>
+
+                <div class="hero-buttons">
+                    <a href="#partidos" class="btn">
+                        Ver partidos →
+                    </a>
+
+                    <a href="#tienda" class="btn-outline">
+                        Explorar tienda
+                    </a>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- PARTIDOS -->
+
+        <section class="section" id="partidos">
+
+            <div class="section-header">
+                <div>
+                    <span class="eyebrow">ENTRA A LA CANCHA</span>
+                    <h2>Próximos partidos</h2>
+                    <p>
+                        Inscríbete individualmente o con tu pareja.
+                    </p>
+                </div>
+            </div>
+
+            <div id="lista-partidos" class="matches-grid">
+                <p class="loading">Cargando partidos...</p>
+            </div>
+
+        </section>
+
+        <!-- ENFRENTAMIENTOS -->
+
+        <section class="section" id="enfrentamientos">
+
+            <div class="section-header">
+                <div>
+                    <span class="eyebrow">PREPARA TU JUEGO</span>
+                    <h2>Enfrentamientos</h2>
+                    <p>
+                        Consulta tus horarios, rivales y canchas.
+                    </p>
+                </div>
+            </div>
+
+            <div id="lista-enfrentamientos">
+                <p class="loading">
+                    Cargando enfrentamientos...
+                </p>
+            </div>
+
+        </section>
+
+        <!-- TIENDA -->
+
+        <section class="section shop-section" id="tienda">
+
+            <div class="section-header">
+                <div>
+                    <span class="eyebrow">EQUÍPATE PARA GANAR</span>
+                    <h2>Tienda Padel Point</h2>
+                    <p>
+                        Descubre nuestros productos y realiza
+                        tus pedidos directamente por WhatsApp.
+                    </p>
+                </div>
+            </div>
+
+            <div id="filtros-categorias" class="filters">
+                <button class="filter active" data-categoria="todos">
+                    Todos
+                </button>
+            </div>
+
+            <div id="lista-productos" class="products-grid">
+                <p class="loading">Cargando productos...</p>
+            </div>
+
+        </section>
+
+        <!-- ESTADISTICAS -->
+
+        <section class="section" id="estadisticas">
+
+            <div class="section-header">
+                <div>
+                    <span class="eyebrow">SUPERA TUS LÍMITES</span>
+                    <h2>Estadísticas y ranking</h2>
+                    <p>
+                        Descubre los resultados de nuestra comunidad.
+                    </p>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+
+                <article class="stat-card">
+                    <span>Partidos</span>
+                    <strong id="total-partidos">—</strong>
+                    <p>Encuentros registrados</p>
+                </article>
+
+                <article class="stat-card">
+                    <span>Inscripciones</span>
+                    <strong id="total-jugadores">—</strong>
+                    <p>Participaciones registradas</p>
+                </article>
+
+                <article class="stat-card">
+                    <span>Enfrentamientos</span>
+                    <strong id="total-enfrentamientos">—</strong>
+                    <p>Encuentros publicados</p>
+                </article>
+
+            </div>
+
+            <div class="ranking-panel">
+                <h3>Ranking de jugadores</h3>
+                <div id="lista-ranking">
+                    <p>Próximamente.</p>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- COMUNIDAD -->
+
+        <section class="community">
+
+            <span class="eyebrow">SOMOS PADEL POINT</span>
+
+            <h2>
+                MÁS QUE UN DEPORTE.<br>
+                <span>UNA COMUNIDAD.</span>
+            </h2>
+
+            <p>
+                Comparte la pasión por el pádel,
+                conoce nuevos jugadores y disfruta cada partido.
+            </p>
+
+            <a href="#partidos" class="btn">
+                Únete al juego →
+            </a>
+
+        </section>
+
+    </main>
+
+    <!-- PIE DE PAGINA -->
+
+    <footer class="footer">
+
+        <div class="footer-content">
+
+            <div class="footer-brand">
+                <img src="./logo.png" alt="Padel Point">
+                <p>Tu punto de encuentro con el pádel.</p>
+            </div>
+
+            <div class="footer-links">
+                <h3>Explorar</h3>
+                <a href="#inicio">Inicio</a>
+                <a href="#partidos">Partidos</a>
+                <a href="#tienda">Tienda</a>
+                <a href="#estadisticas">Estadísticas</a>
+            </div>
+
+            <div class="footer-links">
+                <h3>Contacto</h3>
+                <div id="contacto-club"></div>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            © 2026 Padel Point. Todos los derechos reservados.
+        </div>
+
+    </footer>
+
+    <div id="notificacion" role="status" aria-live="polite" hidden></div>
+
+    <script type="module" src="./app.js"></script>
+
+</body>
+</html>
