@@ -1,4 +1,3 @@
-
 import { supabase } from "./supabase.js";
 
 let partidos = [];
@@ -383,6 +382,34 @@ function mostrarEnfrentamientos() {
                         `).join("")}
                     </tbody>
                 </table>
+
+                <div class="fixture-mobile">
+                    ${juegos.map(e => {
+                        const terminado = e.puntos1 != null && e.puntos2 != null;
+                        const equipo = (id, etiqueta) => {
+                            const par = parejas.find(x => x.id === id);
+                            const numero = parejas.filter(x => x.partido_id === p.id).findIndex(x => x.id === id) + 1;
+                            return `<div class="fixture-team">
+                                <strong>${numero ? `Pareja ${numero}` : etiqueta}</strong>
+                                <span>${seguro(par?.jugador1 || "Por definir")}</span>
+                                <span>${seguro(par?.jugador2 || "Por definir")}</span>
+                            </div>`;
+                        };
+                        return `<div class="fixture-game">
+                            <div class="fixture-game-top">
+                                <span class="badge">TURNO ${seguro(e.turno)}</span>
+                                <strong>Cancha ${seguro(e.cancha)}</strong>
+                            </div>
+                            <div class="fixture-group">Grupo: ${seguro(e.grupo || "General")}</div>
+                            <div class="fixture-versus">
+                                ${equipo(e.pareja1_id, "Pareja 1")}
+                                <strong class="fixture-score">${terminado ? `${seguro(e.puntos1)} - ${seguro(e.puntos2)}` : "VS"}</strong>
+                                ${equipo(e.pareja2_id, "Pareja 2")}
+                            </div>
+                            <div class="fixture-status ${terminado ? "fixture-done" : ""}">${terminado ? "Resultado registrado" : "Pendiente"}</div>
+                        </div>`;
+                    }).join("")}
+                </div>
 
             </article>
         `;
