@@ -1,58 +1,3 @@
-
-2
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { supabase } from "./supabase.js";
 
 const $ = id => document.getElementById(id);
@@ -1145,7 +1090,3 @@ document.addEventListener("click", e => {
 // INICIAR PANEL
 
 ejecutar(verificarSesion);
-
-
-
-
