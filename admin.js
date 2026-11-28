@@ -1,3 +1,4 @@
+
 import { supabase } from "./supabase.js";
 
 const $ = id => document.getElementById(id);
@@ -233,7 +234,7 @@ function mostrarPartidos() {
                 </div>
             `;
         }).join("") :
-        '<div class="empty">No hay partidos registrados.</div>';
+        '<div class="empty">No hay quedadas registradas.</div>';
 }
 
 $("partido-form").addEventListener("submit", e => {
@@ -284,7 +285,7 @@ $("partido-form").addEventListener("submit", e => {
         f.elements.id.value = "";
 
         await cargarDatos();
-        aviso("Partido guardado correctamente.");
+        aviso("Quedada guardada correctamente.");
     });
 });
 
@@ -310,7 +311,7 @@ function editarPartido(id) {
 
 async function eliminarPartido(id) {
     if (!confirm(
-        "¿Eliminar este partido y todos sus inscritos y enfrentamientos?"
+        "¿Eliminar permanentemente esta quedada, sus inscritos, resultados y final? No se puede deshacer."
     )) return;
 
     await consultar(
@@ -318,7 +319,7 @@ async function eliminarPartido(id) {
     );
 
     await cargarDatos();
-    aviso("Partido eliminado.");
+    aviso("Quedada eliminada.");
 }
 
 // SELECTORES
@@ -332,7 +333,7 @@ function actualizarSelectores() {
         const anterior = select.value;
 
         select.innerHTML = `
-            <option value="">Seleccionar partido</option>
+            <option value="">Seleccionar quedada</option>
             ${partidos.map(p => `
                 <option value="${p.id}">
                     ${seguro(p.titulo)}
@@ -667,109 +668,81 @@ $("publicar-fixture").addEventListener("click", () => {
 
 // RESULTADOS
 
+function ganador(e) {
+    if (e.puntos1 == null || e.puntos2 == null) return null;
+    return e.puntos1 > e.puntos2 ? 1 : e.puntos2 > e.puntos1 ? 2 : [1,2].includes(e.punto_oro) ? e.punto_oro : null;
+}
+function clasificar(lista) {
+    const mapa = new Map();
+    for (const e of lista) {
+        for (const id of [e.pareja1_id,e.pareja2_id]) if (!mapa.has(id)) mapa.set(id,{id,pj:0,pg:0,jf:0,jc:0});
+        const g = ganador(e); if (!g) continue;
+        for (const i of [1,2]) {
+            const p=mapa.get(e[`pareja${i}_id`]); p.pj++; p.pg+=Number(g===i); p.jf+=e[`puntos${i}`]; p.jc+=e[`puntos${3-i}`];
+        }
+    }
+    const cmp=(a,b)=>b.pg-a.pg || (b.jf-b.jc)-(a.jf-a.jc) || b.jf-a.jf;
+    const filas=[...mapa.values()].sort(cmp);
+    let ambiguo=false;
+    for(let i=0;i<filas.length;) {
+        let j=i+1; while(j<filas.length && !cmp(filas[i],filas[j])) j++;
+        if(j-i===2) {
+            const a=filas[i],b=filas[i+1];
+            const directos=lista.filter(e=>[e.pareja1_id,e.pareja2_id].includes(a.id)&&[e.pareja1_id,e.pareja2_id].includes(b.id)&&ganador(e));
+            if(directos.length===1) {const e=directos[0]; if(e[`pareja${ganador(e)}_id`]===b.id) [filas[i],filas[i+1]]=[b,a];}
+            else ambiguo=true;
+        } else if(j-i>2) ambiguo=true;
+        i=j;
+    }
+    return {filas,ambiguo};
+}
 function mostrarEnfrentamientos() {
-    const contenedor = $("admin-lista-enfrentamientos");
-    if (!partidos.some(p => p.id === eventoResultados)) {
-        eventoResultados = "";
-    }
-    const lista = enfrentamientos.filter(e => e.partido_id === eventoResultados);
-    const grupos = [...new Set(lista.map(e => e.grupo || "General"))].sort();
-    const partido = partidos.find(p => p.id === eventoResultados);
-    function tarjeta(e) {
-            return `
-                <div class="admin-card">
-                    <h3>Turno ${e.turno} · Cancha ${e.cancha}</h3>
-
-                    <p>Turno ${e.turno} |
-                       Cancha ${e.cancha} |
-                       Grupo ${seguro(e.grupo)}</p>
-
-                    <p>${seguro(nombrePareja(e.pareja1_id))}
-                       VS
-                       ${seguro(nombrePareja(e.pareja2_id))}</p>
-
-                    <form class="admin-form resultado-form"
-                        data-id="${e.id}">
-
-                        <label>
-                            Puntos pareja 1
-                            <input type="number"
-                                name="puntos1"
-                                min="0"
-                                value="${e.puntos1 ?? ""}"
-                                required>
-                        </label>
-
-                        <label>
-                            Puntos pareja 2
-                            <input type="number"
-                                name="puntos2"
-                                min="0"
-                                value="${e.puntos2 ?? ""}"
-                                required>
-                        </label>
-
-                        <button class="btn" type="submit">
-                            Guardar resultado
-                        </button>
-
-                        <button class="btn-delete"
-                            type="button"
-                            data-action="eliminar-fixture"
-                            data-id="${e.id}">
-                            Eliminar
-                        </button>
-
-                    </form>
-                </div>
-            `;
-    }
-    contenedor.innerHTML = `
-        <div class="admin-card">
-            <h2>Gestionar resultados por evento</h2>
-            <div class="admin-form">
-                <label>Seleccionar partido o torneo
-                    <select id="resultados-partido">
-                        <option value="">Seleccionar evento</option>
-                        ${partidos.map(p => `<option value="${seguro(p.id)}" ${p.id === eventoResultados ? "selected" : ""}>${seguro(p.titulo)} — ${seguro(p.fecha)}</option>`).join("")}
-                    </select>
-                </label>
-            </div>
-            ${partido ? `<p>${seguro(partido.titulo)} · ${lista.length} enfrentamientos · ${lista.filter(e => e.puntos1 !== null && e.puntos2 !== null).length} con resultado</p>` : ""}
-        </div>
-        ${!eventoResultados ? '<div class="empty">Selecciona un evento para gestionar sus resultados.</div>' : !lista.length ? '<div class="empty">Este evento no tiene enfrentamientos registrados.</div>' : grupos.map(grupo => `
-            <div class="admin-card" style="border-left:4px solid #ffda00">
-                <h2 style="color:#ffda00">Grupo ${seguro(grupo)}</h2>
-                <p>${lista.filter(e => (e.grupo || "General") === grupo).length} enfrentamientos</p>
-            </div>
-            ${lista.filter(e => (e.grupo || "General") === grupo).sort((a,b) => a.turno-b.turno || a.cancha-b.cancha).map(tarjeta).join("")}
-        `).join("")}
-    `;
-    $("resultados-partido").addEventListener("change", e => {
-        eventoResultados = e.target.value;
-        mostrarEnfrentamientos();
-    });
-
-    document.querySelectorAll(".resultado-form")
-        .forEach(f => {
-            f.addEventListener("submit", e => {
-                e.preventDefault();
-
-                ejecutar(async () => {
-                    await consultar(
-                        supabase.from("enfrentamientos")
-                            .update({
-                                puntos1: Number(f.elements.puntos1.value),
-                                puntos2: Number(f.elements.puntos2.value)
-                            })
-                            .eq("id", f.dataset.id)
-                    );
-
-                    await cargarDatos();
-                    aviso("Resultado guardado.");
-                });
-            });
+    const contenedor=$("admin-lista-enfrentamientos");
+    const partido=partidos.find(p=>p.id===eventoResultados);
+    const lista=enfrentamientos.filter(e=>e.partido_id===eventoResultados);
+    const fase=lista.filter(e=>e.fase!=="final");
+    const final=lista.find(e=>e.fase==="final");
+    const grupos=[...new Set(fase.map(e=>e.grupo||"General"))].sort();
+    const tablas=grupos.map(g=>({g,...clasificar(fase.filter(e=>(e.grupo||"General")===g))}));
+    const candidatos=grupos.length===1 ? tablas[0].filas.slice(0,2) : grupos.length===2 ? tablas.map(t=>t.filas[0]) : [];
+    const listo= fase.length>0 && fase.every(ganador) && candidatos.length===2 && !tablas.some(t=>t.ambiguo);
+    const tarjeta=e=>`<div class="admin-card"><h3>${e.fase==="final"?"Gran final":"Turno "+e.turno} · Cancha ${e.cancha}</h3><p>${seguro(nombrePareja(e.pareja1_id))} VS ${seguro(nombrePareja(e.pareja2_id))}</p>
+    <form class="admin-form resultado-form" data-id="${e.id}">
+    <label>Juegos pareja 1<input type="number" name="puntos1" min="0" step="1" required value="${e.puntos1??""}"></label>
+    <label>Juegos pareja 2<input type="number" name="puntos2" min="0" step="1" required value="${e.puntos2??""}"></label>
+    <label>Punto de oro (solo empate)<select name="punto_oro"><option value="">Sin desempate</option><option value="1" ${e.punto_oro===1?"selected":""}>Pareja 1</option><option value="2" ${e.punto_oro===2?"selected":""}>Pareja 2</option></select></label>
+    ${final&&e.fase!=="final"||partido?.estado==="finalizado"?"<p>Resultado bloqueado.</p>":`<button class="btn" type="submit">Guardar resultado</button><button class="btn-delete" type="button" data-action="eliminar-fixture" data-id="${e.id}">Eliminar</button>`}</form></div>`;
+    contenedor.innerHTML=`<div class="admin-card"><h2>Resultados por quedada</h2><label>Seleccionar quedada<select id="resultados-partido"><option value="">Seleccionar quedada</option>${partidos.map(p=>`<option value="${p.id}" ${p.id===eventoResultados?"selected":""}>${seguro(p.titulo)} — ${seguro(p.fecha)}</option>`).join("")}</select></label></div>
+    ${tablas.map(t=>`<div class="admin-card"><h2>Clasificación · ${seguro(t.g)}</h2><div style="overflow-x:auto"><table><thead><tr><th>Pos.</th><th>Pareja</th><th>PJ</th><th>PG</th><th>JF</th><th>JC</th><th>Dif.</th></tr></thead><tbody>${t.filas.map((p,i)=>`<tr><td>${i+1}</td><td>${seguro(nombrePareja(p.id))}</td><td>${p.pj}</td><td>${p.pg}</td><td>${p.jf}</td><td>${p.jc}</td><td>${p.jf-p.jc}</td></tr>`).join("")}</tbody></table></div></div>${fase.filter(e=>(e.grupo||"General")===t.g).map(tarjeta).join("")}`).join("")}
+    ${partido&&fase.length&&!final?`<div class="admin-card"><h2>Gran final</h2><p>${listo?candidatos.map(p=>seguro(nombrePareja(p.id))).join(" VS "):fase.every(ganador)?"Empate de clasificación sin resolver. No se elegirá al azar.":"Completa todos los resultados y desempates."}</p><label>Cancha <input id="final-cancha" type="number" min="1" max="${partido.canchas}" value="1"></label><button class="btn" id="generar-final" ${listo&&partido.estado==="cerrado"?"":"disabled"}>Generar final</button></div>`:""}
+    ${final?tarjeta(final):""}
+    ${final&&ganador(final)?`<div class="admin-card"><h2>🏆 Campeones de la quedada</h2><p>${seguro(nombrePareja(final[`pareja${ganador(final)}_id`]))}</p><p>Subcampeones: ${seguro(nombrePareja(final[`pareja${3-ganador(final)}_id`]))}</p>${partido.estado!=="finalizado"?'<button class="btn" id="finalizar-quedada">Finalizar quedada</button>':'<p>Quedada finalizada</p>'}</div>`:""}
+    ${partido?`<button class="btn-delete" data-action="eliminar-partido" data-id="${partido.id}">Eliminar quedada</button>`:""}`;
+    $("resultados-partido").onchange=e=>{eventoResultados=e.target.value;mostrarEnfrentamientos();};
+    $("generar-final")?.addEventListener("click",()=>ejecutar(async()=>{
+        const boton=$("generar-final"); boton.disabled=true;
+        try {
+            const cancha=Number($("final-cancha").value);
+            if(!listo||!Number.isInteger(cancha)||cancha<1||cancha>partido.canchas) throw Error("Cancha o clasificación no válida.");
+            await consultar(supabase.from("enfrentamientos").insert({partido_id:partido.id,pareja1_id:candidatos[0].id,pareja2_id:candidatos[1].id,grupo:"Final",fase:"final",turno:Math.max(...fase.map(e=>e.turno))+1,cancha,publicado:true}));
+            await cargarDatos(); aviso("Final publicada.");
+        } finally {boton.disabled=false;}
+    }));
+    $("finalizar-quedada")?.addEventListener("click",()=>ejecutar(async()=>{
+        if(!confirm("¿Finalizar la quedada?")) return;
+        await consultar(supabase.from("partidos").update({estado:"finalizado"}).eq("id",partido.id)); await cargarDatos(); aviso("Quedada finalizada.");
+    }));
+    contenedor.querySelectorAll(".resultado-form").forEach(f=>f.onsubmit=e=>{
+        e.preventDefault(); ejecutar(async()=>{
+            const actual=lista.find(x=>x.id===f.dataset.id);
+            if(partido.estado==="finalizado"||final&&actual.fase!=="final") throw Error("Resultado bloqueado.");
+            const puntos1=Number(f.elements.puntos1.value),puntos2=Number(f.elements.puntos2.value);
+            const punto_oro=puntos1===puntos2?Number(f.elements.punto_oro.value):null;
+            if(!Number.isInteger(puntos1)||!Number.isInteger(puntos2)||puntos1<0||puntos2<0) throw Error("Marcador inválido.");
+            if(puntos1===puntos2&&![1,2].includes(punto_oro)) throw Error("Selecciona quién ganó el punto de oro.");
+            await consultar(supabase.from("enfrentamientos").update({puntos1,puntos2,punto_oro}).eq("id",actual.id)); await cargarDatos(); aviso("Resultado guardado.");
         });
+    });
 }
 
 // RANKING BASICO
@@ -777,7 +750,7 @@ function mostrarEnfrentamientos() {
 function mostrarRanking() {
     const ranking = new Map();
 
-    function sumar(id, puntos, rival) {
+    function sumar(id, puntos, victoria) {
         const pareja = parejas.find(p => p.id === id);
         if (!pareja) return;
 
@@ -802,7 +775,7 @@ function mostrarRanking() {
             jugador.jugados++;
             jugador.puntos += puntos;
 
-            if (puntos > rival) jugador.ganados++;
+            if (victoria) jugador.ganados++;
         }
     }
 
@@ -810,11 +783,11 @@ function mostrarRanking() {
         .filter(e =>
             e.publicado &&
             e.puntos1 !== null &&
-            e.puntos2 !== null
+            e.puntos2 !== null && ganador(e)
         )
         .forEach(e => {
-            sumar(e.pareja1_id, e.puntos1, e.puntos2);
-            sumar(e.pareja2_id, e.puntos2, e.puntos1);
+            sumar(e.pareja1_id, e.puntos1, ganador(e) === 1);
+            sumar(e.pareja2_id, e.puntos2, ganador(e) === 2);
         });
 
     const lista = [...ranking.values()].sort(
@@ -1071,6 +1044,7 @@ document.addEventListener("click", e => {
                 break;
 
             case "eliminar-fixture":
+                { const actual=enfrentamientos.find(x=>x.id===id); if(!actual || partidos.find(p=>p.id===actual.partido_id)?.estado==="finalizado" || actual.fase!=="final" && enfrentamientos.some(x=>x.partido_id===actual.partido_id&&x.fase==="final")) throw Error("Enfrentamiento bloqueado."); }
                 if (!confirm(
                     "¿Eliminar este enfrentamiento y su resultado?"
                 )) return;
@@ -1090,3 +1064,8 @@ document.addEventListener("click", e => {
 // INICIAR PANEL
 
 ejecutar(verificarSesion);
+
+
+
+
+⋮⋮⋮⋮
