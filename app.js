@@ -1,3 +1,6 @@
+
+
+
 import { supabase } from "./supabase.js";
 
 let partidos = [];
@@ -119,7 +122,7 @@ function mostrarPartidos() {
     if (!disponibles.length) {
         contenedor.innerHTML = `
             <div class="empty">
-                Todavía no hay partidos disponibles.
+                Todavía no hay quedadas disponibles.
                 ¡Pronto tendremos nuevos encuentros!
             </div>
         `;
@@ -324,97 +327,64 @@ function nombrePareja(id) {
         (pareja.jugador2 || "Por definir");
 }
 
-function mostrarEnfrentamientos() {
-    const contenedor =
-        document.getElementById("lista-enfrentamientos");
-
-    const publicados = partidos.filter(p =>
-        enfrentamientos.some(e => e.partido_id === p.id)
-    );
-
-    if (!publicados.length) {
-        contenedor.innerHTML = `
-            <div class="empty">
-                Todavía no hay enfrentamientos publicados.
-            </div>
-        `;
-        return;
+function ganador(e) {
+    if (e.puntos1 == null || e.puntos2 == null) return null;
+    const a = Number(e.puntos1), b = Number(e.puntos2);
+    return a > b ? e.pareja1_id : b > a ? e.pareja2_id :
+        Number(e.punto_oro) === 1 ? e.pareja1_id : Number(e.punto_oro) === 2 ? e.pareja2_id : null;
+}
+function marcador(e) {
+    if (e.puntos1 == null || e.puntos2 == null) return 'Pendiente';
+    return `${seguro(e.puntos1)} - ${seguro(e.puntos2)}`;
+}
+function estadoJuego(e) {
+    const g = ganador(e);
+    if (!g) return e.puntos1 != null && e.puntos2 != null ? 'Desempate pendiente' : 'Pendiente';
+    return `${Number(e.puntos1) === Number(e.puntos2) ? 'Punto de oro: ' : 'Ganadores: '}${seguro(nombrePareja(g))}`;
+}
+function clasificacionPublica(juegos) {
+    const grupos = new Map();
+    for (const e of juegos.filter(e => e.fase !== 'final')) {
+        const grupo = e.grupo || 'General';
+        if (!grupos.has(grupo)) grupos.set(grupo, new Map());
+        const tabla = grupos.get(grupo);
+        for (const id of [e.pareja1_id,e.pareja2_id]) if (!tabla.has(id)) tabla.set(id,{id,pj:0,pg:0,jf:0,jc:0});
+        const g = ganador(e);
+        if (!g) continue;
+        const a=tabla.get(e.pareja1_id), b=tabla.get(e.pareja2_id);
+        a.pj++; b.pj++; a.jf+=Number(e.puntos1); a.jc+=Number(e.puntos2);
+        b.jf+=Number(e.puntos2); b.jc+=Number(e.puntos1); tabla.get(g).pg++;
     }
-
-    contenedor.innerHTML = publicados.map(p => {
-
-        const juegos = enfrentamientos.filter(
-            e => e.partido_id === p.id
-        );
-
-        return `
-            <article class="fixture-card">
-
-                <h3>${seguro(p.titulo)}</h3>
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Turno</th>
-                            <th>Cancha</th>
-                            <th>Grupo</th>
-                            <th>Pareja 1</th>
-                            <th>Pareja 2</th>
-                            <th>Resultado</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        ${juegos.map(e => `
-                            <tr>
-                                <td>${e.turno}</td>
-                                <td>${e.cancha}</td>
-                                <td>${seguro(e.grupo || "General")}</td>
-                                <td>${seguro(nombrePareja(e.pareja1_id))}</td>
-                                <td>${seguro(nombrePareja(e.pareja2_id))}</td>
-                                <td>
-                                    ${e.puntos1 !== null &&
-                                      e.puntos2 !== null
-                                        ? `${e.puntos1} - ${e.puntos2}`
-                                        : "Pendiente"}
-                                </td>
-                            </tr>
-                        `).join("")}
-                    </tbody>
-                </table>
-
-                <div class="fixture-mobile">
-                    ${juegos.map(e => {
-                        const terminado = e.puntos1 != null && e.puntos2 != null;
-                        const equipo = (id, etiqueta) => {
-                            const par = parejas.find(x => x.id === id);
-                            const numero = parejas.filter(x => x.partido_id === p.id).findIndex(x => x.id === id) + 1;
-                            return `<div class="fixture-team">
-                                <strong>${numero ? `Pareja ${numero}` : etiqueta}</strong>
-                                <span>${seguro(par?.jugador1 || "Por definir")}</span>
-                                <span>${seguro(par?.jugador2 || "Por definir")}</span>
-                            </div>`;
-                        };
-                        return `<div class="fixture-game">
-                            <div class="fixture-game-top">
-                                <span class="badge">TURNO ${seguro(e.turno)}</span>
-                                <strong>Cancha ${seguro(e.cancha)}</strong>
-                            </div>
-                            <div class="fixture-group">Grupo: ${seguro(e.grupo || "General")}</div>
-                            <div class="fixture-versus">
-                                ${equipo(e.pareja1_id, "Pareja 1")}
-                                <strong class="fixture-score">${terminado ? `${seguro(e.puntos1)} - ${seguro(e.puntos2)}` : "VS"}</strong>
-                                ${equipo(e.pareja2_id, "Pareja 2")}
-                            </div>
-                            <div class="fixture-status ${terminado ? "fixture-done" : ""}">${terminado ? "Resultado registrado" : "Pendiente"}</div>
-                        </div>`;
-                    }).join("")}
-                </div>
-
-            </article>
-        `;
-
-    }).join("");
+    return [...grupos].map(([grupo,tabla]) => {
+        const base=(a,b)=>b.pg-a.pg || (b.jf-b.jc)-(a.jf-a.jc) || b.jf-a.jf;
+        const filas=[...tabla.values()].sort(base);
+        const bloques=[];
+        for(const f of filas){const ultimo=bloques[bloques.length-1]; if(ultimo && base(ultimo[0],f)===0) ultimo.push(f); else bloques.push([f]);}
+        let pos=1;
+        const html=bloques.map(bl=>{
+            if(bl.length===2){const directos=juegos.filter(e=>e.fase!=='final' && (e.grupo||'General')===grupo && [e.pareja1_id,e.pareja2_id].includes(bl[0].id) && [e.pareja1_id,e.pareja2_id].includes(bl[1].id)); const wins=bl.map(f=>directos.filter(e=>ganador(e)===f.id).length); if(wins[0]!==wins[1]){if(wins[1]>wins[0]) bl.reverse(); return bl.map(f=>fila(f,pos++)).join('');}}
+            const inicio=pos; pos+=bl.length; return bl.map(f=>fila(f,inicio)).join('');
+        }).join('');
+        function fila(f,n){return `<tr><td>${n}</td><td style="overflow-wrap:anywhere">${seguro(nombrePareja(f.id))}</td><td>${f.pj}</td><td>${f.pg}</td><td>${f.jf}</td><td>${f.jc}</td><td>${f.jf-f.jc}</td></tr>`;}
+        return `<section style="margin:18px 0"><h4>Clasificación · ${seguro(grupo)}</h4><div style="overflow-x:auto"><table style="display:table;width:100%;font-size:12px"><thead><tr><th>Pos.</th><th>Pareja</th><th>PJ</th><th>PG</th><th>JF</th><th>JC</th><th>Dif.</th></tr></thead><tbody>${html}</tbody></table></div><small>PJ: jugados · PG: ganados · JF: juegos a favor · JC: juegos en contra. Posiciones iguales indican empate sin resolver.</small></section>`;
+    }).join('');
+}
+function mostrarEnfrentamientos() {
+    const contenedor=document.getElementById('lista-enfrentamientos');
+    const publicados=partidos.filter(p=>enfrentamientos.some(e=>e.partido_id===p.id));
+    if(!publicados.length){contenedor.innerHTML='<div class="empty">Todavía no hay enfrentamientos publicados.</div>';return;}
+    contenedor.innerHTML=publicados.map(p=>{
+        const juegos=enfrentamientos.filter(e=>e.partido_id===p.id);
+        const grupos=juegos.filter(e=>e.fase!=='final');
+        const final=juegos.find(e=>e.fase==='final');
+        const g=final && ganador(final);
+        const equipo=(id)=>`<div class="fixture-team"><strong>${seguro(nombrePareja(id))}</strong></div>`;
+        return `<article class="fixture-card"><h3>${seguro(p.titulo)}</h3>${p.estado==='finalizado'?'<span class="badge">Quedada finalizada</span>':''}
+        ${clasificacionPublica(grupos)}
+        <table><thead><tr><th>Turno</th><th>Cancha</th><th>Grupo</th><th>Pareja 1</th><th>Pareja 2</th><th>Resultado</th></tr></thead><tbody>${grupos.map(e=>`<tr><td>${seguro(e.turno)}</td><td>${seguro(e.cancha)}</td><td>${seguro(e.grupo||'General')}</td><td>${seguro(nombrePareja(e.pareja1_id))}</td><td>${seguro(nombrePareja(e.pareja2_id))}</td><td>${marcador(e)}<br><small>${estadoJuego(e)}</small></td></tr>`).join('')}</tbody></table>
+        <div class="fixture-mobile">${grupos.map(e=>`<div class="fixture-game"><div class="fixture-game-top"><span class="badge">TURNO ${seguro(e.turno)}</span><strong>Cancha ${seguro(e.cancha)}</strong></div><div class="fixture-group">Grupo: ${seguro(e.grupo||'General')}</div><div class="fixture-versus">${equipo(e.pareja1_id)}<strong class="fixture-score">${marcador(e)}</strong>${equipo(e.pareja2_id)}</div><div class="fixture-status ${ganador(e)?'fixture-done':''}">${estadoJuego(e)}</div></div>`).join('')}</div>
+        ${final?`<section style="border:1px solid #ffda00;border-radius:12px;padding:16px;margin-top:20px;text-align:center"><h3 style="color:#ffda00">🏆 GRAN FINAL</h3><p>Cancha ${seguro(final.cancha)}</p><p>${seguro(nombrePareja(final.pareja1_id))} VS ${seguro(nombrePareja(final.pareja2_id))}</p><h3>${marcador(final)}</h3><p>${estadoJuego(final)}</p>${g?`<h3 style="color:#ffda00">Campeones de la quedada</h3><p>${seguro(nombrePareja(g))}</p><p>Subcampeones: ${seguro(nombrePareja(g===final.pareja1_id?final.pareja2_id:final.pareja1_id))}</p>`:''}</section>`:''}</article>`;
+    }).join('');
 }
 
 // CATEGORIAS
@@ -609,3 +579,7 @@ function mostrarContacto() {
 // INICIAR PAGINA
 
 cargarDatos();
+
+
+
+
